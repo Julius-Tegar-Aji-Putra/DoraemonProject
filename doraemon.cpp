@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <GL/glut.h>
+#include <string>
 
 // Definisikan M_PI jika tidak tersedia
 #ifndef M_PI
@@ -78,15 +79,74 @@ static void drawCylinder(float radius, float height, int slices) {
 }
 
 // Fungsi untuk menampilkan text di OpenGL
-void drawText(const char* text, float x, float y, float r, float g, float b) {
-    // Set warna teks
-    glColor3f(r, g, b);
-    glRasterPos2f(x, y);
-    
-    // Render teks karakter per karakter
+void drawText(const char* text, float x, float y,
+              float rText, float gText, float bText,         // Warna teks
+              float rBg, float gBg, float bBg, float aBg,   // Warna latar belakang (RGBA)
+              void* font, float bgPaddingX, float bgPaddingY) {
+
+    float charHeight = 0.0f;
+    // Tentukan tinggi karakter berdasarkan font
+    if (font == GLUT_BITMAP_HELVETICA_10) { charHeight = 10.0f; }
+    else if (font == GLUT_BITMAP_HELVETICA_12) { charHeight = 12.0f; }
+    else if (font == GLUT_BITMAP_HELVETICA_18) { charHeight = 18.0f; }
+    else if (font == GLUT_BITMAP_TIMES_ROMAN_10) { charHeight = 10.0f; }
+    else if (font == GLUT_BITMAP_TIMES_ROMAN_24) { charHeight = 24.0f; }
+    else if (font == GLUT_BITMAP_9_BY_15) { charHeight = 15.0f; }
+    else if (font == GLUT_BITMAP_8_BY_13) { charHeight = 13.0f; }
+    else { charHeight = 18.0f; } // Default ke font yang Anda pakai di displayControlInfo
+
+    // Simpan state OpenGL yang relevan
+    GLboolean lightingEnabled = glIsEnabled(GL_LIGHTING);
+    GLboolean textureEnabled = glIsEnabled(GL_TEXTURE_2D);
+    GLboolean blendEnabled = glIsEnabled(GL_BLEND);
+    GLboolean depthTestEnabled = glIsEnabled(GL_DEPTH_TEST);
+    // Tidak perlu menyimpan blendSrc/Dst yang spesifik RGB/Alpha lagi
+
+    // Nonaktifkan fitur yang tidak perlu untuk teks 2D dan latar belakang
+    if (lightingEnabled) glDisable(GL_LIGHTING);
+    if (textureEnabled) glDisable(GL_TEXTURE_2D);
+    if (depthTestEnabled) glDisable(GL_DEPTH_TEST);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // Blending standar untuk transparansi
+
+    // Hitung lebar total teks untuk menggambar satu quad latar belakang
+    int totalTextWidth = 0;
     for (const char* c = text; *c; c++) {
-        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, *c);
+        totalTextWidth += glutBitmapWidth(font, *c);
     }
+
+    // Gambar satu quad besar untuk latar belakang seluruh string
+    if (aBg > 0.0f && totalTextWidth > 0) { 
+        glColor4f(rBg, gBg, bBg, aBg); 
+        glBegin(GL_QUADS);
+            glVertex2f(x - bgPaddingX,               y - bgPaddingY);
+            glVertex2f(x + totalTextWidth + bgPaddingX, y - bgPaddingY);
+            glVertex2f(x + totalTextWidth + bgPaddingX, y + charHeight + bgPaddingY);
+            glVertex2f(x - bgPaddingX,               y + charHeight + bgPaddingY);
+        glEnd();
+    }
+
+    // Gambar teks (dengan simulasi bold)
+    glColor3f(rText, gText, bText); 
+    
+    glRasterPos2f(x, y);
+    for (const char* c = text; *c; c++) {
+        glutBitmapCharacter(font, *c);
+    }
+
+    glRasterPos2f(x + 1, y); 
+    for (const char* c = text; *c; c++) {
+        glutBitmapCharacter(font, *c);
+    }
+
+    // Kembalikan state OpenGL ke kondisi semula
+    if (lightingEnabled) glEnable(GL_LIGHTING);
+    if (textureEnabled) glEnable(GL_TEXTURE_2D);
+    if (depthTestEnabled) glEnable(GL_DEPTH_TEST);
+    if (!blendEnabled) glDisable(GL_BLEND); // Jika blending sebelumnya tidak aktif, matikan lagi
+    // Jika blending sebelumnya aktif, biarkan aktif, karena kita sudah mengatur glBlendFunc standar
+    // Blok UI di main.cpp mungkin akan menonaktifkannya jika perlu untuk 3D.
 }
 
 // Function to smoothly adjust tilt angles
@@ -112,29 +172,39 @@ static void smoothTilt() {
 
 // Fungsi untuk menampilkan info kontrol
 void displayControlInfo() {
-    int yPos = 30; // Posisi Y awal (dari bawah)
-    int lineHeight = 20; // Tinggi setiap baris
-    
-    // Informasi kontrol utama
-    drawText("0: Mode kamera bebas", 10, yPos, 1.0f, 1.0f, 1.0f);
-    yPos += lineHeight;
-    drawText("1: Mode third person", 10, yPos, 1.0f, 1.0f, 1.0f);
-    yPos += lineHeight;
-    
-    if (cameraMode == 0) {
-        // Info kontrol untuk mode kamera bebas
-        drawText("--- Mode Free Camera ---", 800/2 - 100, 600 - 50, 1.0f, 1.0f, 0.0f);
-        drawText("Tombol panah: Gerak kamera secara horizontal", 800/2 - 150, 600 - 70, 1.0f, 1.0f, 0.0f);
-        drawText("W/S: Gerak kamera secara vertikal", 800/2 - 150, 600 - 90, 1.0f, 1.0f, 0.0f);
-        drawText("A/D: Rotasi kamera", 800/2 - 150, 600 - 110, 1.0f, 1.0f, 0.0f);
-    } else {
-        // Info kontrol untuk mode third person
-        drawText("--- Mode Third Person ---", 800/2 - 100, 600 - 50, 1.0f, 1.0f, 0.0f);
-        drawText("W/S: Gerak Doraemon maju/mundur", 800/2 - 150, 600 - 70, 1.0f, 1.0f, 0.0f);
-        drawText("A/D: Putar Doraemon kiri/kanan", 800/2 - 150, 600 - 90, 1.0f, 1.0f, 0.0f);
-        drawText("Q/E: Terbang naik/turun", 800/2 - 150, 600 - 110, 1.0f, 1.0f, 0.0f);
+    void* font = GLUT_BITMAP_HELVETICA_18; 
+    float bgPaddingX = 4.0f; 
+    float bgPaddingY = 3.0f; 
+
+    float rText = 0.0f, gText = 0.0f, bText = 0.0f; 
+    float rBg = 1.0f, gBg = 1.0f, bBg = 1.0f, aBg = 0.85f; 
+
+    string panduanStr; 
+
+    panduanStr += "0: Mode Kamera Bebas || 1: Mode Third Person";
+
+    if (cameraMode == 0) { 
+        panduanStr += " || Panah: Gerak Horizontal || W/S: Gerak Vertikal || A/D: Rotasi Kamera";
+    } else { 
+        panduanStr += " || W/S: Maju/Mundur || A/D: Putar Kiri/Kanan || Q/E: Terbang Naik/Turun";
     }
+
+    int totalWidth = 0;
+    for (size_t i = 0; i < panduanStr.length(); ++i) { 
+        totalWidth += glutBitmapWidth(font, panduanStr[i]);
+    }
+
+    float screenWidth = glutGet(GLUT_WINDOW_WIDTH);
+    float xPos = (screenWidth - totalWidth) / 2.0f; 
+    float yPos = 30; 
+
+    drawText(panduanStr.c_str(), xPos, yPos,
+             rText, gText, bText,
+             rBg, gBg, bBg, aBg,
+             font, bgPaddingX, bgPaddingY);
 }
+
+
 
 // Fungsi untuk orientasi kamera
 void orientCamera(float ang) {

@@ -23,7 +23,10 @@ float getLookY();
 float getLookZ();
 
 // UI & Environment functions
-void drawText(const char* text, float x, float y, float r, float g, float b);
+void drawText(const char* text, float x, float y,
+              float rText, float gText, float bText,         
+              float rBg, float gBg, float bBg, float aBg,   
+              void* font, float bgPaddingX, float bgPaddingY);
 void displayControlInfo();
 void drawGround();
 
