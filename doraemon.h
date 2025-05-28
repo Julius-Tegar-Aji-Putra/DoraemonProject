@@ -4,7 +4,6 @@
 #include <GL/glut.h>
 #include <stdio.h>
 
-// Function declarations for Doraemon
 void initDoraemon();
 void resetDoraemonState();
 void drawDoraemon();
@@ -13,7 +12,6 @@ void setKeyState(unsigned char key, bool state);
 void setCameraMode(int mode);
 int getCameraMode();
 
-// Camera control functions
 void specialKeyPressed(int key, int x, int y);
 float getCameraX();
 float getCameraY();
@@ -22,7 +20,6 @@ float getLookX();
 float getLookY();
 float getLookZ();
 
-// UI & Environment functions
 void drawText(const char* text, float x, float y,
               float rText, float gText, float bText,         
               float rBg, float gBg, float bBg, float aBg,   
@@ -30,7 +27,6 @@ void drawText(const char* text, float x, float y,
 void displayControlInfo();
 void drawGround();
 
-// Position getters for Doraemon
 bool checkCameraCollision(float cameraX, float cameraY, float cameraZ, float* responseX, float* responseY, float* responseZ);
 float getDoraemonX();
 float getDoraemonY();

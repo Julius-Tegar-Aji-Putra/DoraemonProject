@@ -45,6 +45,11 @@ static void addBuilding(float x, float z, float width, float depth, float height
 static void drawBuilding(float x, float z, float width, float depth, float height, Color color, float alpha) {
     glPushMatrix();
     glTranslatef(x, height/2, z);
+
+    if (alpha < 1.0f) {
+        glDepthMask(GL_FALSE); 
+    }
+
     glColor4f(color.r, color.g, color.b, alpha);
     
     // Gedung utama
@@ -53,6 +58,12 @@ static void drawBuilding(float x, float z, float width, float depth, float heigh
     glutSolidCube(1.0);
     glPopMatrix();
     
+    if (alpha < 1.0f) { 
+      glColor4f(0.1f, 0.1f, 0.2f, alpha); 
+    } else {
+      glColor4f(0.1f, 0.1f, 0.2f, 1.0f); 
+    }
+
     // Garis-garis untuk jendela
     glColor4f(0.1f, 0.1f, 0.2f, alpha);
     float windowSize = 0.5f;
@@ -100,6 +111,10 @@ static void drawBuilding(float x, float z, float width, float depth, float heigh
             glutSolidCube(1.0);
             glPopMatrix();
         }
+    }
+
+    if (alpha < 1.0f) {
+        glDepthMask(GL_TRUE); 
     }
     
     glPopMatrix();
@@ -271,6 +286,9 @@ void initArena() {
 
 // Fungsi untuk menggambar arena
 void drawArena(float camX, float camY, float camZ) {
+    glEnable(GL_LIGHTING); 
+    glEnable(GL_DEPTH_TEST);
+
     drawRoad();
     
     drawWalls();
@@ -291,6 +309,7 @@ void drawArena(float camX, float camY, float camZ) {
                                  
         } else {
             drawBuilding(b.x, b.z, b.width, b.depth, b.height, b.color, 1.0f);
+            glDisable(GL_BLEND);
         }
     }
 }
@@ -444,7 +463,7 @@ void drawArenaText(float x, float y, const char* text, float r, float g, float b
         glutBitmapCharacter(font, *c);
     }
 
-    glRasterPos2f(x + 1, y); // Offset 1 piksel ke kanan
+    glRasterPos2f(x + 1, y); 
     for (const char* c = text; *c != '\0'; c++) {
         glutBitmapCharacter(font, *c);
     }
@@ -460,6 +479,47 @@ float getArenaSize() {
     return arenaSize;
 }
 
+// Fungsi untuk mendapatkan tinggi gedung
+float getBuildingRoofHeight(float x, float z) {
+    const std::vector<Building>& buildings = getArenaBuildings();
+    for (const auto& b : buildings) {
+        float minX = b.x - b.width / 2.0f;
+        float maxX = b.x + b.width / 2.0f;
+        float minZ = b.z - b.depth / 2.0f;
+        float maxZ = b.z + b.depth / 2.0f;
+        if (x >= minX && x <= maxX && z >= minZ && z <= maxZ) {
+            return b.height; 
+        }
+    }
+    return 0.0f; 
+}
 
+// Prosedur untuk menggambar tanah dan atap gedung
+void drawGroundAndRoofsForStencil() {
+    float halfArena = getArenaSize() / 2.0f;
+
+    glBegin(GL_QUADS);
+        glVertex3f(-halfArena, 0.01f, -halfArena);
+        glVertex3f( halfArena, 0.01f, -halfArena);
+        glVertex3f( halfArena, 0.01f,  halfArena);
+        glVertex3f(-halfArena, 0.01f,  halfArena);
+    glEnd();
+
+    const vector<Building>& buildings = getArenaBuildings();
+    for (const auto& b : buildings) {
+        float minX = b.x - b.width / 2.0f;
+        float maxX = b.x + b.width / 2.0f;
+        float minZ = b.z - b.depth / 2.0f;
+        float maxZ = b.z + b.depth / 2.0f;
+        float roofY = b.height; 
+
+        glBegin(GL_QUADS);
+            glVertex3f(minX, roofY, minZ);
+            glVertex3f(maxX, roofY, minZ);
+            glVertex3f(maxX, roofY, maxZ);
+            glVertex3f(minX, roofY, maxZ);
+        glEnd();
+    }
+}
 
 #endif

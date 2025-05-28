@@ -7,22 +7,16 @@ Image::~Image() {
 	delete[] pixels;
 }
 namespace {
-	//Konversi 4 buah karakter ke integer, 
-	//menggunakan bentuk little-endian 
 	int toInt(const char* bytes) {
 		return (int)(((unsigned char)bytes[3] << 24) |
 					((unsigned char)bytes[2] << 16) |
    					((unsigned char)bytes[1] << 8) |
    					(unsigned char)bytes[0]);
 	}
-	//Konversi 2 buah karakter ke integer, 
-	//menggunakan bentuk little-endian
 	short toShort(const char* bytes) {
 		return (short)(((unsigned char)bytes[1] << 8) |
     					(unsigned char)bytes[0]);
  	}
-	//Membaca 4 byte selanjutnya sebagai integer, 
-  	//menggunakan bentuk little-endian
   	int readInt(ifstream &input) {
  		char buffer[4];
  		input.read(buffer, 4);
@@ -127,14 +121,12 @@ Image* loadBMP(const char* filename) {
    			assert(!"Format bitmap ini tidak diketahui!");
  	}
  
-	//Membaca data
  	int bytesPerRow = ((width * 3 + 3) / 4) * 4 - (width * 3 % 4);
  	int size = bytesPerRow * height;
  	auto_array<char> pixels(new char[size]);
  	input.seekg(dataOffset, ios_base::beg);
  	input.read(pixels.get(), size);
  
- 	//Mengambil data yang mempunyai format benar
  	auto_array<char> pixels2(new char[width * height * 3]);
  	for(int y = 0; y < height; y++) {
   		for(int x = 0; x < width; x++) {

@@ -117,11 +117,11 @@ void resetGame() {
     gameIsActive = true;
     gameOver = false;
 
-    resetKoin();
     initDoraemon();
+    resetKoin();
 
 
-    gameStartTime = std::chrono::steady_clock::now();
+    gameStartTime = chrono::steady_clock::now();
     gameDurationSeconds = 0;
 }
 
@@ -129,7 +129,7 @@ void resetGame() {
 
 // Fungsi untuk inisialisasi
 void init() {
-    srand(time(NULL)); //
+    srand(time(NULL)); 
 
     glClearColor(0.5f, 0.7f, 1.0f, 1.0f); 
     glEnable(GL_DEPTH_TEST); 
@@ -171,27 +171,27 @@ void init() {
         texture_jalan_paving = 0;
     }
 
-    initArena();
     resetGame();
+    initArena();
 }
 
 // Fungsi untuk menggambar scene TANPA bayangan
 void drawSceneObjects(float camX, float camY, float camZ) {
-    glEnable(GL_LIGHTING); //
-    glEnable(GL_DEPTH_TEST); //
+    glEnable(GL_LIGHTING); 
+    glEnable(GL_DEPTH_TEST); 
     glDisable(GL_BLEND);
 
-    drawArena(camX, camY, camZ); //
+    drawArena(camX, camY, camZ); 
 
-    if (gameIsActive || gameOver) { //
-        glPushMatrix(); //
-        glTranslatef(getDoraemonX(), getDoraemonY(), getDoraemonZ()); //
-        drawDoraemon(); //
-        glPopMatrix(); //
+    if (gameIsActive || gameOver) { 
+        glPushMatrix(); 
+        glTranslatef(getDoraemonX(), getDoraemonY(), getDoraemonZ()); 
+        drawDoraemon(); 
+        glPopMatrix(); 
     }
 
-    if (gameIsActive) { //
-        drawKoin(); //
+    if (gameIsActive) { 
+        drawKoin(); 
     }
 }
 
@@ -223,62 +223,83 @@ void drawShadows() {
     glDepthMask(GL_FALSE);   
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //
-    glColor4f(0.15f, 0.15f, 0.15f, 0.6f); // Warna bayangan: abu-abu gelap transparan
+    glColor4f(0.15f, 0.15f, 0.15f, 0.6f); 
 
-    // Gunakan Stencil: Hanya gambar jika stencil bernilai 1
     glEnable(GL_STENCIL_TEST);
-    glStencilFunc(GL_EQUAL, 1, 0xFF); // Gambar HANYA jika stencil = 1
-    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP); // Jangan ubah stencil saat menggambar bayangan
+    glStencilFunc(GL_EQUAL, 1, 0xFF); 
+    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP); 
 
     // ---- Bayangan Gedung-gedung ----
-    const std::vector<Building>& allBuildings = getArenaBuildings(); //
+    const vector<Building>& allBuildings = getArenaBuildings(); 
     for (const auto& b : allBuildings) {
-        glPushMatrix(); //
-        glShadowProjection(light_position_shadow, shadow_plane_point, shadow_plane_normal); //
-        glTranslatef(b.x, b.height / 2.0f, b.z); //
-        glScalef(b.width, b.height, b.depth); //
-        glutSolidCube(1.0); //
-        glPopMatrix(); //
+        glPushMatrix(); 
+        glShadowProjection(light_position_shadow, shadow_plane_point, shadow_plane_normal); 
+        glTranslatef(b.x, b.height / 2.0f, b.z); 
+        glScalef(b.width, b.height, b.depth); 
+        glutSolidCube(1.0); 
+        glPopMatrix(); 
     }
 
     // ---- Bayangan Doraemon ----
-    if (gameIsActive || gameOver) { //
-        glPushMatrix(); //
-        glShadowProjection(light_position_shadow, shadow_plane_point, shadow_plane_normal); //
-        glTranslatef(getDoraemonX(), getDoraemonY(), getDoraemonZ()); //
-        drawDoraemon(); //
-        glPopMatrix(); //
+    if (gameIsActive || gameOver) { 
+        glPushMatrix(); 
+        glShadowProjection(light_position_shadow, shadow_plane_point, shadow_plane_normal); 
+        glTranslatef(getDoraemonX(), getDoraemonY(), getDoraemonZ()); 
+        drawDoraemon(); 
+        glPopMatrix(); 
     }
 
     // ---- Bayangan Koin-koin ----
     if (gameIsActive) { //
-        const std::vector<KoinData>& allCoins = getAllKoinData(); //
+        const vector<KoinData>& allCoins = getAllKoinData(); 
         for (const auto& koin : allCoins) {
-            if (koin.isActive) { //
-                glPushMatrix(); //
-                glShadowProjection(light_position_shadow, shadow_plane_point, shadow_plane_normal); //
-                glTranslatef(koin.x, koin.y + koin.yOffset, koin.z); //
-                glRotatef(koin.rotation, 0.0f, 1.0f, 0.0f); //
-                glRotatef(270.0f, 0.0f, 1.0f, 0.0f); //
+            if (koin.isActive) { 
+                glPushMatrix(); 
+                glShadowProjection(light_position_shadow, shadow_plane_point, shadow_plane_normal); 
+                glTranslatef(koin.x, koin.y + koin.yOffset, koin.z); 
+                glRotatef(koin.rotation, 0.0f, 1.0f, 0.0f); 
+                glRotatef(270.0f, 0.0f, 1.0f, 0.0f); 
 
-                GLUquadricObj *cylinderShadow = gluNewQuadric(); //
-                gluQuadricDrawStyle(cylinderShadow, GLU_FILL); //
-                float coinRadius = 0.5f; // ***FIXED: Match original 0.5f***
-                float coinThickness = 0.1f; //
-                gluCylinder(cylinderShadow, coinRadius, coinRadius, coinThickness, 20, 1); //
-                gluDisk(cylinderShadow, 0.0f, coinRadius, 20, 1); //
-                glPushMatrix(); //
-                glTranslatef(0.0f, 0.0f, coinThickness); //
-                gluDisk(cylinderShadow, 0.0f, coinRadius, 20, 1); //
-                glPopMatrix(); //
-                gluDeleteQuadric(cylinderShadow); //
-                glPopMatrix(); //
+                GLUquadricObj *cylinderShadow = gluNewQuadric(); 
+                gluQuadricDrawStyle(cylinderShadow, GLU_FILL); 
+                float coinRadius = 0.5f; 
+                float coinThickness = 0.1f; 
+                gluCylinder(cylinderShadow, coinRadius, coinRadius, coinThickness, 20, 1); 
+                gluDisk(cylinderShadow, 0.0f, coinRadius, 20, 1); 
+                glPushMatrix(); 
+                glTranslatef(0.0f, 0.0f, coinThickness); 
+                gluDisk(cylinderShadow, 0.0f, coinRadius, 20, 1); 
+                glPopMatrix(); 
+                gluDeleteQuadric(cylinderShadow); 
+                glPopMatrix(); 
             }
         }
     }
 
-    glDepthMask(GL_TRUE); // Aktifkan lagi depth writing
-    glPopAttrib(); // Kembalikan state
+    glDepthMask(GL_TRUE); 
+    glPopAttrib(); 
+}
+
+void drawBuildingShadow(const Building& b) {
+    glPushMatrix();
+    glTranslatef(b.x, b.height / 2.0f, b.z);
+    glScalef(b.width, b.height, b.depth);
+    glutSolidCube(1.0);
+    glPopMatrix();
+}
+
+void drawCoinShadow() {
+    GLUquadricObj *cylinderShadow = gluNewQuadric();
+    gluQuadricDrawStyle(cylinderShadow, GLU_FILL); 
+    float coinRadius = 0.35f;
+    float coinThickness = 0.1f;
+    gluCylinder(cylinderShadow, coinRadius, coinRadius, coinThickness, 20, 1);
+    gluDisk(cylinderShadow, 0.0f, coinRadius, 20, 1);
+    glPushMatrix();
+    glTranslatef(0.0f, 0.0f, coinThickness);
+    gluDisk(cylinderShadow, 0.0f, coinRadius, 20, 1);
+    glPopMatrix();
+    gluDeleteQuadric(cylinderShadow);
 }
 
 // Fungsi untuk menampilkan scene
@@ -290,130 +311,135 @@ void display() {
     float currentCamX = getCameraX(); 
     float currentCamY = getCameraY(); 
     float currentCamZ = getCameraZ(); 
-    // Atur kamera berdasarkan data dari modul Doraemon
-    gluLookAt(getCameraX(), getCameraY(), getCameraZ(),    // Posisi kamera
-              getLookX(), getLookY(), getLookZ(),          // Titik yang dilihat
-              0.0, 1.0, 0.0);                             // Vektor up
+  
+    gluLookAt(getCameraX(), getCameraY(), getCameraZ(),    
+              getLookX(), getLookY(), getLookZ(),          
+              0.0, 1.0, 0.0);                            
 
     glEnable(GL_LIGHTING); 
     glEnable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND);    
     
-    // Gambar bidang datar
     drawArena(currentCamX, currentCamY, currentCamZ); 
     
-    // Gambar Doraemon di posisi yang ditentukan
     if (gameIsActive || gameOver) {
         glPushMatrix();
         glTranslatef(getDoraemonX(), getDoraemonY(), getDoraemonZ());
         drawDoraemon();
         glPopMatrix();
     }
-    // Gambar koin di posisi yang ditentukan
+
     if (gameIsActive) {
         glEnable(GL_LIGHTING);
         drawKoin();
     }
 
+    drawArena(currentCamX, currentCamY, currentCamZ);
+
     if (shadowsEnabled) {
-        glDisable(GL_LIGHTING);  // Bayangan tidak dipengaruhi cahaya
-        glEnable(GL_DEPTH_TEST); // Agar bayangan tidak "bertarung" dengan lantai
-                                  // Alternatif: glEnable(GL_DEPTH_TEST) dan gambar bayangan sedikit di atas lantai (Y+epsilon)
-                                  // atau gunakan glPolygonOffset. Untuk kesederhanaan, kita disable dulu.
-
-        glColor4f(0.2f, 0.2f, 0.2f, 0.65f); // Warna bayangan: abu-abu gelap transparan
-                                            // Sesuaikan alpha (nilai ke-4) untuk intensitas bayangan
-
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // Blending standar untuk transparansi
-
-        // Stencil buffer (opsional, untuk mencegah bayangan ganda jika ada beberapa sumber cahaya atau multiple pass)
-        // Untuk kasus ini (satu sumber cahaya, satu pass bayangan per objek), mungkin tidak perlu.
-        // Jika Anda menggunakan stencil, Anda akan clear stencil buffer, set stencil func/op
-        // untuk menandai area lantai, lalu gambar bayangan hanya jika stencil pass.
-
-        glEnable(GL_POLYGON_OFFSET_FILL);
-        glPolygonOffset(-1.0f, -1.0f);
-
-        // ---- Bayangan Gedung-gedung ----
-        const std::vector<Building>& allBuildings = getArenaBuildings(); // Fungsi dari arena.cpp
-        for (const auto& b : allBuildings) {
-            glPushMatrix();
-            // Terapkan matriks proyeksi bayangan ke matriks ModelView saat ini
-            glShadowProjection(light_position_shadow, shadow_plane_point, shadow_plane_normal);
-            
-            // Lakukan transformasi yang SAMA PERSIS seperti saat menggambar gedung aslinya
-            // (dari arena.cpp, fungsi drawBuilding utama, sebelum scaling bentuk dasar)
-            glTranslatef(b.x, b.height / 2.0f, b.z);
-            glScalef(b.width, b.height, b.depth);
-            glutSolidCube(1.0); // Gambar bentuk dasar gedung untuk bayangan
-            glPopMatrix();
-        }
-
-        // ---- Bayangan Doraemon ----
-        if (gameIsActive || gameOver) { // Hanya gambar bayangan jika Doraemon ada
-            glPushMatrix();
-            glShadowProjection(light_position_shadow, shadow_plane_point, shadow_plane_normal);
-            
-            // Transformasi Doraemon (SAMA PERSIS seperti di blok gambar Doraemon di atas)
-            glTranslatef(getDoraemonX(), getDoraemonY(), getDoraemonZ());
-            drawDoraemon(); 
-            glPopMatrix();
-        }
-
-        // ---- Bayangan Koin-koin ----
-        if (gameIsActive) { // Hanya gambar bayangan jika koin aktif
-            const std::vector<KoinData>& allCoins = getAllKoinData(); // Fungsi dari koin.cpp
-            for (const auto& koin : allCoins) {
-                if (koin.isActive) {
-                    glPushMatrix();
-                    glShadowProjection(light_position_shadow, shadow_plane_point, shadow_plane_normal);
-
-                    // Transformasi Koin (SAMA PERSIS seperti di drawSingleKoin di koin.cpp)
-                    glTranslatef(koin.x, koin.y + koin.yOffset, koin.z);
-                    glRotatef(koin.rotation, 0.0f, 1.0f, 0.0f);
-                    glRotatef(270.0f, 0.0f, 1.0f, 0.0f); 
-
-                    // Gambar bentuk dasar koin untuk bayangan
-                    GLUquadricObj *cylinderShadow = gluNewQuadric();
-                    float coinRadius = 0.35f; 
-                    float coinThickness = 0.1f; 
-                    gluCylinder(cylinderShadow, coinRadius, coinRadius, coinThickness, 20, 1);
-                    gluDisk(cylinderShadow, 0.0f, coinRadius, 20, 1);
-                    glPushMatrix();
-                    glTranslatef(0.0f, 0.0f, coinThickness);
-                    gluDisk(cylinderShadow, 0.0f, coinRadius, 20, 1);
-                    glPopMatrix();
-                    gluDeleteQuadric(cylinderShadow);
-                    glPopMatrix();
-                }
-            }
-        }
+        glEnable(GL_STENCIL_TEST); 
+        glDisable(GL_DEPTH_TEST);  
+        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE); 
         
-        // Kembalikan state OpenGL
-        glDisable(GL_POLYGON_OFFSET_FILL);
-        glPopAttrib();
-        // glEnable(GL_DEPTH_TEST); // Aktifkan kembali jika sebelumnya dinonaktifkan untuk bayangan
-        // glEnable(GL_LIGHTING); // Ini sudah diaktifkan di awal untuk objek utama,
-                                 // dan akan diatur lagi oleh UI atau frame berikutnya.
+        glStencilFunc(GL_ALWAYS, 1, 0xFF); 
+        glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE); 
+
+        drawGroundAndRoofsForStencil();
+
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); 
+        glEnable(GL_DEPTH_TEST);
     }
     
+    if (shadowsEnabled) {
+        glPushAttrib(GL_ENABLE_BIT | GL_CURRENT_BIT | GL_POLYGON_BIT | GL_STENCIL_BIT);
+
+        glDisable(GL_LIGHTING);  
+        glEnable(GL_DEPTH_TEST);  
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glColor4f(0.15f, 0.15f, 0.15f, 0.6f); 
+
+        glEnable(GL_POLYGON_OFFSET_FILL);
+        glPolygonOffset(-1.0f, -1.0f); 
+
+        glEnable(GL_STENCIL_TEST);
+        glStencilFunc(GL_EQUAL, 1, 0xFF); 
+        glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
+        GLfloat ground_plane_point[3] = {0.0f, 0.01f, 0.0f};
+        GLfloat plane_normal[3] = {0.0f, 1.0f, 0.0f};      
+
+        // ---- Bayangan Gedung (Tetap di Tanah) ----
+        glPushMatrix();
+        glShadowProjection(light_position_shadow, ground_plane_point, plane_normal);
+        const std::vector<Building>& allBuildings = getArenaBuildings(); 
+        for (const auto& b : allBuildings) {
+             drawBuildingShadow(b); 
+        }
+        glPopMatrix();
+
+        // ---- Bayangan Doraemon (DINAMIS) ---- 
+        if (gameIsActive || gameOver) { 
+            float doraemonX = getDoraemonX(); 
+            float doraemonZ = getDoraemonZ(); 
+            
+            float plane_height = getBuildingRoofHeight(doraemonX, doraemonZ);
+            GLfloat current_plane_point[3] = {0.0f, plane_height + 0.01f, 0.0f}; 
+
+            glPushMatrix();
+            glShadowProjection(light_position_shadow, current_plane_point, plane_normal); 
+            
+
+            glPushMatrix();
+            glTranslatef(doraemonX, getDoraemonY(), doraemonZ); 
+            drawDoraemon(); 
+            glPopMatrix();
+
+            glPopMatrix();
+        }
+
+        // ---- Bayangan Koin-koin (Dinamis) ----
+        const vector<KoinData>& allCoins = getAllKoinData(); 
+        for (const auto& koin : allCoins) { 
+            if (koin.isActive) { 
+                float plane_height = getBuildingRoofHeight(koin.x, koin.z); 
+                GLfloat current_plane_point[3] = {0.0f, plane_height + 0.01f, 0.0f};
+
+                glPushMatrix(); 
+                glShadowProjection(light_position_shadow, current_plane_point, plane_normal); 
+
+                glTranslatef(koin.x, koin.y + koin.yOffset, koin.z); 
+                glRotatef(koin.rotation, 0.0f, 1.0f, 0.0f); 
+                glRotatef(270.0f, 0.0f, 1.0f, 0.0f); 
+
+                drawCoinShadow(); 
+
+                glPopMatrix(); 
+            }
+        }
+
+        glDisable(GL_POLYGON_OFFSET_FILL); 
+        glPopAttrib(); 
+        glDisable(GL_STENCIL_TEST); 
+    }
+
     // ============== Setup untuk rendering UI (Teks) ==============
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
-    // Sesuaikan nilai ortho dengan ukuran window Anda (misal 800x600)
     gluOrtho2D(0.0, glutGet(GLUT_WINDOW_WIDTH), 0.0, glutGet(GLUT_WINDOW_HEIGHT));
     
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
     
-    glDisable(GL_LIGHTING); // Nonaktifkan lighting untuk teks UI
-    glDisable(GL_DEPTH_TEST); // Nonaktifkan depth test untuk teks UI
+    glDisable(GL_LIGHTING); 
+    glDisable(GL_DEPTH_TEST); 
 
-    void* uiFont = GLUT_BITMAP_HELVETICA_18; // Atau GLUT_BITMAP_TIMES_ROMAN_24
-    float uiFontHeight = 18.0f; // Perkiraan tinggi font untuk spasi (sesuaikan jika pakai font lain)
-    float uiPadding = 5.0f;     // Spasi antar baris teks
+    void* uiFont = GLUT_BITMAP_HELVETICA_18; 
+    float uiFontHeight = 18.0f; 
+    float uiPadding = 5.0f; 
+    float blackR = 0.0f, blackG = 0.0f, blackB = 0.0f;    
 
     // Warna teks default (putih)
     float whiteR = 1.0f, whiteG = 1.0f, whiteB = 1.0f;
@@ -421,9 +447,9 @@ void display() {
     // --- Tampilkan Skor ---
     char scoreText[50];
     sprintf(scoreText, "Skor: %d", score);
-    drawArenaText(10, glutGet(GLUT_WINDOW_HEIGHT) - (uiFontHeight + uiPadding), scoreText, whiteR, whiteG, whiteB, uiFont); 
+    drawArenaText(10, glutGet(GLUT_WINDOW_HEIGHT) - (uiFontHeight + uiPadding), scoreText, 
+                  whiteR, whiteG, whiteB, uiFont); // Teks hitam
 
-    
     // --- Tampilkan Timer ---
     char timerText[50]; 
     if (gameIsActive) {
@@ -453,21 +479,62 @@ void display() {
 
     // --- Tampilkan Pesan Game Over dan Tombol Restart ---
     if (gameOver) {
-        // Posisi teks game over bisa di tengah layar atau disesuaikan
-        float screenWidth = glutGet(GLUT_WINDOW_WIDTH);
-        float screenHeight = glutGet(GLUT_WINDOW_HEIGHT);
+        void* gameOverFont = GLUT_BITMAP_TIMES_ROMAN_24; 
+        float gameOverFontHeight = 24.0f; 
+        float bgPaddingX_gameOver = 8.0f; 
+        float bgPaddingY_gameOver = 5.0f; 
+
+        float rTextGameOver = 0.0f, gTextGameOver = 0.0f, bTextGameOver = 0.0f;
+        float rBgGameOver = 1.0f, gBgGameOver = 1.0f, bBgGameOver = 1.0f, aBgGameOver = 1.0f;
+
         const char* msg1 = "Permainan Selesai! Anda Menang!";
         const char* msg2 = "Tekan 'R' untuk Mulai Ulang";
-        // Perkirakan lebar teks untuk centering (ini cara sederhana, tidak presisi)
-        // float msg1Width = strlen(msg1) * 10; // Perkiraan lebar (tergantung font)
-        // float msg2Width = strlen(msg2) * 10;
-        drawArenaText(screenWidth / 2 - 150, screenHeight / 2 + uiFontHeight, msg1, whiteR, whiteG, whiteB, uiFont);
-        drawArenaText(screenWidth / 2 - 150, screenHeight / 2, msg2, whiteR, whiteG, whiteB, uiFont);
+        
+        float screenWidth = glutGet(GLUT_WINDOW_WIDTH);
+        float screenHeight = glutGet(GLUT_WINDOW_HEIGHT);
+
+        int msg1Width = 0;
+        for (const char* c = msg1; *c; c++) {
+            msg1Width += glutBitmapWidth(gameOverFont, *c);
+        }
+        int msg2Width = 0;
+        for (const char* c = msg2; *c; c++) {
+            msg2Width += glutBitmapWidth(gameOverFont, *c);
+        }
+
+        float msg1X = (screenWidth - msg1Width) / 2.0f;
+        float msg1Y = screenHeight / 2.0f + gameOverFontHeight / 2.0f; // Sedikit di atas tengah
+
+        float msg2X = (screenWidth - msg2Width) / 2.0f;
+        float msg2Y = screenHeight / 2.0f - gameOverFontHeight - uiPadding; // Sedikit di bawah tengah
+
+        if (aBgGameOver > 0.0f && msg1Width > 0) {
+            glColor4f(rBgGameOver, gBgGameOver, bBgGameOver, aBgGameOver);
+            glBegin(GL_QUADS);
+                glVertex2f(msg1X - bgPaddingX_gameOver, msg1Y - bgPaddingY_gameOver);
+                glVertex2f(msg1X + msg1Width + bgPaddingX_gameOver, msg1Y - bgPaddingY_gameOver);
+                glVertex2f(msg1X + msg1Width + bgPaddingX_gameOver, msg1Y + gameOverFontHeight + bgPaddingY_gameOver);
+                glVertex2f(msg1X - bgPaddingX_gameOver, msg1Y + gameOverFontHeight + bgPaddingY_gameOver);
+            glEnd();
+        }
+
+        drawArenaText(msg1X, msg1Y, msg1, rTextGameOver, gTextGameOver, bTextGameOver, gameOverFont);
+
+        if (aBgGameOver > 0.0f && msg2Width > 0) {
+            glColor4f(rBgGameOver, gBgGameOver, bBgGameOver, aBgGameOver);
+            glBegin(GL_QUADS);
+                glVertex2f(msg2X - bgPaddingX_gameOver, msg2Y - bgPaddingY_gameOver);
+                glVertex2f(msg2X + msg2Width + bgPaddingX_gameOver, msg2Y - bgPaddingY_gameOver);
+                glVertex2f(msg2X + msg2Width + bgPaddingX_gameOver, msg2Y + gameOverFontHeight + bgPaddingY_gameOver);
+                glVertex2f(msg2X - bgPaddingX_gameOver, msg2Y + gameOverFontHeight + bgPaddingY_gameOver);
+            glEnd();
+        }
+        // Gambar teks msg2
+        drawArenaText(msg2X, msg2Y, msg2, rTextGameOver, gTextGameOver, bTextGameOver, gameOverFont);
     }
     
     // Panggil displayControlInfo yang sudah dimodifikasi (untuk panduan keyboard)
-    // displayControlInfo akan menggunakan font dan warna internalnya yang baru
-    if (gameIsActive) { 
+    if (gameIsActive || gameOver) { 
          displayControlInfo(); 
     }
 
@@ -480,8 +547,6 @@ void display() {
     
     glMatrixMode(GL_MODELVIEW);  
     glPopMatrix();              
-    // Pastikan mode kembali ke GL_MODELVIEW untuk frame berikutnya
-    // glMatrixMode(GL_MODELVIEW); // Sudah diatur oleh pop matrix di atas
     
     glutSwapBuffers();
 }
@@ -497,8 +562,8 @@ void reshape(int w, int h) {
 
 // ============== Fungsi keyboard() dimodifikasi ==============
 void keyboard(unsigned char key, int x, int y) {
-    if (gameIsActive) { // Hanya proses input game jika aktif
-        setKeyState(key, true); // Dari doraemon.cpp
+    if (gameIsActive) { 
+        setKeyState(key, true); 
     }
 
     // Toggle mode kamera (bisa tetap di luar gameIsActive jika diinginkan)
@@ -516,13 +581,13 @@ void keyboard(unsigned char key, int x, int y) {
     }
 
     if (key == 'b' || key == 'B') { // Tombol 'B' untuk toggle bayangan
-        shadowsEnabled = !shadowsEnabled; // Balik nilainya (true jadi false, false jadi true)
+        shadowsEnabled = !shadowsEnabled; 
         if (shadowsEnabled) {
             printf("Bayangan: AKTIF\n");
         } else {
             printf("Bayangan: NONAKTIF\n");
         }
-        glutPostRedisplay(); // Minta OpenGL untuk menggambar ulang scene
+        glutPostRedisplay(); 
     }
 }
 
@@ -533,13 +598,13 @@ void keyboardUp(unsigned char key, int x, int y) {
 
 // ============== Fungsi idle() dimodifikasi ==============
 void idle() {
-    if (gameIsActive) { // Hanya update jika game sedang aktif
+    if (gameIsActive) { 
         updateDoraemon();
         updateKoin();
 
         // --- Logika Deteksi Kolisi Koin ---
         float dX = getDoraemonX();
-        float dY = getDoraemonY(); // Perhatikan Y Doraemon, mungkin perlu offset
+        float dY = getDoraemonY(); 
         float dZ = getDoraemonZ();
 
         const std::vector<KoinData>& coins = getAllKoinData();
@@ -571,13 +636,17 @@ void idle() {
     glutPostRedisplay();
 }
 
-
-
-
 int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH | GLUT_STENCIL);
-    glutInitWindowSize(800, 600);
+    int windowWidth = 1000;
+    int windowHeight = 600;
+    glutInitWindowSize(windowWidth, windowHeight);
+    int screenWidth = glutGet(GLUT_SCREEN_WIDTH);
+    int screenHeight = glutGet(GLUT_SCREEN_HEIGHT);
+    int posX = (screenWidth - windowWidth) / 2;
+    int posY = (screenHeight - windowHeight) / 2;
+    glutInitWindowPosition(posX, posY); 
     glutCreateWindow("Doraemon 3D dengan Baling-Baling Bambu - Terbang");
     
     init();

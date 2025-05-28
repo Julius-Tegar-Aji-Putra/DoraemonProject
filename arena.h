@@ -36,4 +36,7 @@ float getArenaSize();
 
 const vector<Building>& getArenaBuildings();
 
+float getBuildingRoofHeight(float x, float z);
+
+void drawGroundAndRoofsForStencil();
 #endif // ARENA_H
