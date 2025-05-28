@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <vector>
 
+using namespace std;
+
 // Structures for arena
 typedef struct {
     float r, g, b;
@@ -19,7 +21,7 @@ typedef struct {
 
 // Function declarations for arena initialization and rendering
 void initArena();
-void drawArena();
+void drawArena(float camX, float camY, float camZ);
 
 // Updated function prototype with Y response
 bool checkCollision(float x, float y, float z, float radius, float* responseX, float* responseY, float* responseZ);
@@ -36,5 +38,7 @@ void drawArenaText(float x, float y, const char* text);
 // Arena configuration
 void setArenaSize(float size);
 float getArenaSize();
+
+const vector<Building>& getArenaBuildings();
 
 #endif // ARENA_H

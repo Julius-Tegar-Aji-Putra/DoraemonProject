@@ -6,6 +6,7 @@
 
 // Function declarations for Doraemon
 void initDoraemon();
+void resetDoraemonState();
 void drawDoraemon();
 void updateDoraemon();
 void setKeyState(unsigned char key, bool state);

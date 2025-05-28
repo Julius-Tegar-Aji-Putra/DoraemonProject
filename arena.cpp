@@ -6,6 +6,8 @@
 #include <math.h>
 #include <stdio.h>
 #include <GL/glut.h>
+extern GLuint texture_tembok_pembatas;
+extern GLuint texture_jalan_paving;
 
 // Arena properties
 static float arenaSize = 50.0f;
@@ -40,10 +42,10 @@ static void addBuilding(float x, float z, float width, float depth, float height
 }
 
 // Fungsi untuk membuat gedung
-static void drawBuilding(float x, float z, float width, float depth, float height, Color color) {
+static void drawBuilding(float x, float z, float width, float depth, float height, Color color, float alpha) {
     glPushMatrix();
     glTranslatef(x, height/2, z);
-    glColor3f(color.r, color.g, color.b);
+    glColor4f(color.r, color.g, color.b, alpha);
     
     // Gedung utama
     glPushMatrix();
@@ -52,7 +54,7 @@ static void drawBuilding(float x, float z, float width, float depth, float heigh
     glPopMatrix();
     
     // Garis-garis untuk jendela
-    glColor3f(0.1f, 0.1f, 0.2f);
+    glColor4f(0.1f, 0.1f, 0.2f, alpha);
     float windowSize = 0.5f;
     float spacing = 0.6f;
     
@@ -103,71 +105,156 @@ static void drawBuilding(float x, float z, float width, float depth, float heigh
     glPopMatrix();
 }
 
+// FUNGSI BARU: Untuk mengecek apakah kamera di dalam gedung
+static bool isCameraInsideThisBuilding(const Building& building, float camX, float camY, float camZ) {
+    float buildingMinX = building.x - building.width / 2.0f;
+    float buildingMaxX = building.x + building.width / 2.0f;
+    float buildingMinY = 0.0f; // Asumsi gedung mulai dari Y=0
+    float buildingMaxY = building.height;
+    float buildingMinZ = building.z - building.depth / 2.0f;
+    float buildingMaxZ = building.z + building.depth / 2.0f;
+
+    if (camX >= buildingMinX && camX <= buildingMaxX &&
+        camY >= buildingMinY && camY <= buildingMaxY && 
+        camZ >= buildingMinZ && camZ <= buildingMaxZ) {
+        return true;
+    }
+    return false;
+}
+
 // Fungsi untuk menggambar tembok arena
 static void drawWalls() {
-    float boundarySize = arenaSize / 2;
-    float wallThickness = 1.0f;
-    
-    glColor3f(0.5f, 0.5f, 0.5f); // Warna tembok
-    
-    // Tembok selatan
+    float boundarySize = arenaSize / 2.0f;
+    float wallThickness = 1.0f; 
+    // Anda sudah punya wallHeight dari variabel statis di arena.cpp
+    // static float wallHeight = 100.0f; (jika ini definisi Anda)
+
+    if (texture_tembok_pembatas == 0) { // Jika tekstur gagal dimuat, gambar warna solid saja
+        glColor3f(0.5f, 0.5f, 0.5f); // Warna fallback
+    } else {
+        glEnable(GL_TEXTURE_2D); // [cite: 59]
+        glBindTexture(GL_TEXTURE_2D, texture_tembok_pembatas); // [cite: 59]
+        glColor3f(1.0f, 1.0f, 1.0f); // Warna putih agar warna asli tekstur muncul [cite: 60]
+    }
+
+    // Definisikan berapa kali tekstur ingin diulang pada permukaan tembok
+    // Sesuaikan nilai ini untuk mendapatkan skala tekstur yang diinginkan
+    float texRepeatX_longWall = (arenaSize + wallThickness * 2.0f) / 5.0f; // Ulang setiap 5 unit lebar
+    float texRepeatX_shortWall = arenaSize / 5.0f; // Untuk tembok timur/barat (lebarnya adalah arenaSize)
+    float texRepeatY_wall = wallHeight / 5.0f;   // Ulang setiap 5 unit tinggi
+
+    glNormal3f(0.0f, 0.0f, 0.0f); // Normal akan di-set per sisi
+
+    // Tembok bagian dalam (yang menghadap ke arena)
+
+    // Tembok Selatan (Bagian Dalam - Menghadap -Z)
     glPushMatrix();
-    glTranslatef(0.0f, wallHeight/2, boundarySize + wallThickness/2);
-    glScalef(arenaSize + wallThickness*2, wallHeight, wallThickness);
-    glutSolidCube(1.0);
+    glTranslatef(0.0f, 0.0f, boundarySize); // Posisikan ke Z positif (tepi luar)
+    glBegin(GL_QUADS);
+        glNormal3f(0.0f, 0.0f, -1.0f); // Normal menghadap ke dalam arena (-Z)
+        glTexCoord2f(0.0f, 0.0f); glVertex3f(-boundarySize - wallThickness, 0.0f, 0.0f);
+        glTexCoord2f(texRepeatX_longWall, 0.0f); glVertex3f(boundarySize + wallThickness, 0.0f, 0.0f);
+        glTexCoord2f(texRepeatX_longWall, texRepeatY_wall); glVertex3f(boundarySize + wallThickness, wallHeight, 0.0f);
+        glTexCoord2f(0.0f, texRepeatY_wall); glVertex3f(-boundarySize - wallThickness, wallHeight, 0.0f);
+    glEnd();
+    glPopMatrix();
+
+    // Tembok Utara (Bagian Dalam - Menghadap +Z)
+    glPushMatrix();
+    glTranslatef(0.0f, 0.0f, -boundarySize); // Posisikan ke Z negatif (tepi luar)
+    glBegin(GL_QUADS);
+        glNormal3f(0.0f, 0.0f, 1.0f); // Normal menghadap ke dalam arena (+Z)
+        glTexCoord2f(0.0f, 0.0f); glVertex3f(boundarySize + wallThickness, 0.0f, 0.0f);
+        glTexCoord2f(texRepeatX_longWall, 0.0f); glVertex3f(-boundarySize - wallThickness, 0.0f, 0.0f);
+        glTexCoord2f(texRepeatX_longWall, texRepeatY_wall); glVertex3f(-boundarySize - wallThickness, wallHeight, 0.0f);
+        glTexCoord2f(0.0f, texRepeatY_wall); glVertex3f(boundarySize + wallThickness, wallHeight, 0.0f);
+    glEnd();
+    glPopMatrix();
+
+    // Tembok Timur (Bagian Dalam - Menghadap -X)
+    glPushMatrix();
+    glTranslatef(boundarySize, 0.0f, 0.0f); // Posisikan ke X positif (tepi luar)
+    glBegin(GL_QUADS);
+        glNormal3f(-1.0f, 0.0f, 0.0f); // Normal menghadap ke dalam arena (-X)
+        glTexCoord2f(0.0f, 0.0f); glVertex3f(0.0f, 0.0f, boundarySize + wallThickness);
+        glTexCoord2f(texRepeatX_shortWall, 0.0f); glVertex3f(0.0f, 0.0f, -boundarySize - wallThickness);
+        glTexCoord2f(texRepeatX_shortWall, texRepeatY_wall); glVertex3f(0.0f, wallHeight, -boundarySize - wallThickness);
+        glTexCoord2f(0.0f, texRepeatY_wall); glVertex3f(0.0f, wallHeight, boundarySize + wallThickness);
+    glEnd();
     glPopMatrix();
     
-    // Tembok utara
+    // Tembok Barat (Bagian Dalam - Menghadap +X)
     glPushMatrix();
-    glTranslatef(0.0f, wallHeight/2, -boundarySize - wallThickness/2);
-    glScalef(arenaSize + wallThickness*2, wallHeight, wallThickness);
-    glutSolidCube(1.0);
+    glTranslatef(-boundarySize, 0.0f, 0.0f); // Posisikan ke X negatif (tepi luar)
+    glBegin(GL_QUADS);
+        glNormal3f(1.0f, 0.0f, 0.0f); // Normal menghadap ke dalam arena (+X)
+        glTexCoord2f(0.0f, 0.0f); glVertex3f(0.0f, 0.0f, -boundarySize - wallThickness);
+        glTexCoord2f(texRepeatX_shortWall, 0.0f); glVertex3f(0.0f, 0.0f, boundarySize + wallThickness);
+        glTexCoord2f(texRepeatX_shortWall, texRepeatY_wall); glVertex3f(0.0f, wallHeight, boundarySize + wallThickness);
+        glTexCoord2f(0.0f, texRepeatY_wall); glVertex3f(0.0f, wallHeight, -boundarySize - wallThickness);
+    glEnd();
     glPopMatrix();
-    
-    // Tembok timur
-    glPushMatrix();
-    glTranslatef(boundarySize + wallThickness/2, wallHeight/2, 0.0f);
-    glScalef(wallThickness, wallHeight, arenaSize);
-    glutSolidCube(1.0);
-    glPopMatrix();
-    
-    // Tembok barat
-    glPushMatrix();
-    glTranslatef(-boundarySize - wallThickness/2, wallHeight/2, 0.0f);
-    glScalef(wallThickness, wallHeight, arenaSize);
-    glutSolidCube(1.0);
-    glPopMatrix();
+
+    if (texture_tembok_pembatas != 0) {
+        glDisable(GL_TEXTURE_2D); // [cite: 66]
+        glBindTexture(GL_TEXTURE_2D,0);
+    }
 }
 
 // Fungsi untuk menggambar jalan
 static void drawRoad() {
+    // Bagian utama jalan (permukaan bertekstur)
     glPushMatrix();
-    glColor3f(0.2f, 0.2f, 0.2f);
-    glTranslatef(0.0f, -0.05f, 0.0f);
-    glScalef(arenaSize, 0.1f, arenaSize);
-    glutSolidCube(1.0);
-    glPopMatrix();
+    if (texture_jalan_paving != 0) { // Hanya terapkan tekstur jika berhasil dimuat
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, texture_jalan_paving);
+        // Set warna ke putih agar warna asli tekstur muncul, dimodulasi pencahayaan
+        glColor3f(1.0f, 1.0f, 1.0f); 
+    } else {
+        glColor3f(0.2f, 0.2f, 0.2f); // Warna fallback jika tekstur gagal dimuat
+    }
     
-    // Marka jalan
+    glTranslatef(0.0f, 0.0f, 0.0f); // Posisi jalan (Y sedikit di bawah origin)
+    
+    // Menggambar jalan sebagai satu quad besar di atas untuk UV mapping yang lebih baik
+    // Ini menggantikan glScalef dan glutSolidCube untuk permukaan utama jalan
+    // agar kita bisa mengontrol pengulangan tekstur.
+    float halfArena = arenaSize / 2.0f;
+    // Tentukan berapa kali tekstur diulang. Sesuaikan angka 5.0f untuk skala yang berbeda.
+    float texRoadRepeat = arenaSize / 10.0f; 
+
+    glBegin(GL_QUADS);
+        glNormal3f(0.0f, 1.0f, 0.0f); // Normal menghadap ke atas
+        glTexCoord2f(0.0f, 0.0f); glVertex3f(-halfArena, 0.0f, -halfArena);
+        glTexCoord2f(texRoadRepeat, 0.0f); glVertex3f(halfArena, 0.0f, -halfArena);
+        glTexCoord2f(texRoadRepeat, texRoadRepeat); glVertex3f(halfArena, 0.0f, halfArena);
+        glTexCoord2f(0.0f, texRoadRepeat); glVertex3f(-halfArena, 0.0f, halfArena);
+    glEnd();
+    
+    glPopMatrix(); // Selesai dengan bagian utama jalan
+
+    if (texture_jalan_paving != 0) {
+        glDisable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, 0); // Unbind
+    }
+
+    // Marka jalan (tetap digambar sebagai kubus solid di atas jalan bertekstur)
+    // Pastikan lighting aktif untuk marka jika sebelumnya termodifikasi
+    glEnable(GL_LIGHTING); // Jika sebelumnya ter-disable untuk bagian tertentu
+    glColor3f(1.0f, 1.0f, 1.0f); // Warna putih untuk marka jalan
+    
     glPushMatrix();
-    glColor3f(1.0f, 1.0f, 1.0f);
-    glTranslatef(0.0f, 0.01f, 0.0f);
+    // Posisikan marka sedikit di atas permukaan jalan utama untuk menghindari Z-fighting
+    // Jalan utama ada di Y = -0.05f. Ketebalan marka 0.01f. Jadi Y marka = -0.05f + 0.005f (tengahnya)
+    // Atau, jika jalan digambar di Y=0 pada quad di atas, maka marka di Y=0.01f
+    // Mengikuti logika quad di atas (Y=0 untuk permukaan jalan), maka marka di Y sedikit di atas 0.
+    glTranslatef(0.0f, 0.01f, 0.0f); // Y marka sedikit di atas permukaan jalan (Y=0)
     
-    // Jalan horizontal
-    glPushMatrix();
-    glTranslatef(0.0f, 0.0f, 0.0f);
-    glScalef(arenaSize-10.0f, 0.01f, 0.5f);
-    glutSolidCube(1.0);
-    glPopMatrix();
-    
-    // Jalan vertikal
-    glPushMatrix();
-    glTranslatef(0.0f, 0.0f, 0.0f);
-    glScalef(0.5f, 0.01f, arenaSize-10.0f);
-    glutSolidCube(1.0);
-    glPopMatrix();
-    
-    glPopMatrix();
+    glPopMatrix(); // Selesai dengan marka jalan
+}
+
+const vector<Building>& getArenaBuildings() {
+    return buildings;
 }
 
 // Initialize the arena
@@ -202,7 +289,7 @@ void initArena() {
 }
 
 // Draw the entire arena
-void drawArena() {
+void drawArena(float camX, float camY, float camZ) {
     // Draw the ground/road
     drawRoad();
     
@@ -210,9 +297,23 @@ void drawArena() {
     drawWalls();
     
     // Draw all buildings
-    for (size_t i = 0; i < buildings.size(); i++) {
-        Building b = buildings[i];
-        drawBuilding(b.x, b.z, b.width, b.depth, b.height, b.color);
+    for (size_t i = 0; i < buildings.size(); i++) { 
+        Building b = buildings[i]; 
+        
+        bool cameraIsInside = isCameraInsideThisBuilding(b, camX, camY, camZ);
+        
+        if (cameraIsInside) {
+            glEnable(GL_BLEND); 
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
+
+            drawBuilding(b.x, b.z, b.width, b.depth, b.height, b.color, 0.4f); 
+
+            glDisable(GL_BLEND); 
+                                
+                                 
+        } else {
+            drawBuilding(b.x, b.z, b.width, b.depth, b.height, b.color, 1.0f);
+        }
     }
 }
 
@@ -420,5 +521,7 @@ void setArenaSize(float size) {
 float getArenaSize() {
     return arenaSize;
 }
+
+
 
 #endif

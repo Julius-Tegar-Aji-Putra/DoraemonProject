@@ -733,6 +733,13 @@ void initDoraemon() {
     orientCamera(camAngle);
 }
 
+// Implementasi fungsi resetDoraemonState jika Anda menambahkannya
+void resetDoraemonState() {
+    // Panggil initDoraemon() atau salin logika reset posisi & state ke sini
+    initDoraemon(); // Cara termudah adalah memanggil init lagi
+    printf("Doraemon state reset.\n");
+}
+
 // Position getters for Doraemon
 float getDoraemonX() {
     return posX;
