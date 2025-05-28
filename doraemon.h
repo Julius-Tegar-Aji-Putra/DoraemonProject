@@ -27,6 +27,7 @@ void displayControlInfo();
 void drawGround();
 
 // Position getters for Doraemon
+bool checkCameraCollision(float cameraX, float cameraY, float cameraZ, float* responseX, float* responseY, float* responseZ);
 float getDoraemonX();
 float getDoraemonY();
 float getDoraemonZ();

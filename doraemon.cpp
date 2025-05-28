@@ -37,6 +37,8 @@ static bool keyStates[256];
 static float camAngle = 0.0f;
 static float camLookX = 0.0f, camLookZ = -1.0f; // Vektor arah kamera
 
+float arenaSize = getArenaSize();
+
 // Fungsi untuk menggambar silinder
 static void drawCylinder(float radius, float height, int slices) {
     float angle, x, y;
@@ -609,10 +611,51 @@ int getCameraMode() {
     return cameraMode;
 }
 
+// Fungsi untuk memeriksa tabrakan kamera dengan objek di arena
+bool checkCameraCollision(float cameraX, float cameraY, float cameraZ, float* responseX, float* responseY, float* responseZ) {
+    // Radius kamera sekitar Doraemon (untuk menghindari menembus objek)
+    float cameraRadius = 1.0f;
+    
+    // Pemeriksaan tabrakan dengan arena
+    bool collision = false;
+    *responseX = 0.0f;
+    *responseY = 0.0f;
+    *responseZ = 0.0f;
+
+    // Periksa tabrakan dengan tembok arena
+    float boundarySize = arenaSize / 2;
+    
+    // Jika kamera lebih dekat dengan dinding, kita dorong kamera ke luar
+    if (cameraX + cameraRadius > boundarySize) {
+        *responseX = (boundarySize - (cameraX + cameraRadius));
+        collision = true;
+    }
+    if (cameraX - cameraRadius < -boundarySize) {
+        *responseX = (-boundarySize - (cameraX - cameraRadius));
+        collision = true;
+    }
+    if (cameraZ + cameraRadius > boundarySize) {
+        *responseZ = (boundarySize - (cameraZ + cameraRadius));
+        collision = true;
+    }
+    if (cameraZ - cameraRadius < -boundarySize) {
+        *responseZ = (-boundarySize - (cameraZ - cameraRadius));
+        collision = true;
+    }
+    
+    return collision;
+}
+
 // Getter functions for camera
 float getCameraX() {
     if (cameraMode == 1) {
-        return posX - cameraDistance * sin(angleY * M_PI / 180.0);
+        float responseX = 0.0f, responseY = 0.0f, responseZ = 0.0f;
+        float cameraX = posX - cameraDistance * sin(angleY * M_PI / 180.0);
+        // Periksa tabrakan kamera dengan objek dan atur posisi jika diperlukan
+        if (checkCameraCollision(cameraX, posY, posZ, &responseX, &responseY, &responseZ)) {
+            cameraX += responseX;  // Sesuaikan posisi kamera
+        }
+        return cameraX;
     } else {
         return freeCamX;
     }
@@ -628,7 +671,14 @@ float getCameraY() {
 
 float getCameraZ() {
     if (cameraMode == 1) {
-        return posZ - cameraDistance * cos(angleY * M_PI / 180.0);
+        float responseX = 0.0f, responseY = 0.0f, responseZ = 0.0f;
+        float cameraZ = posZ - cameraDistance * cos(angleY * M_PI / 180.0);
+        
+        // Periksa tabrakan kamera dengan objek dan atur posisi jika diperlukan
+        if (checkCameraCollision(posX, posY, cameraZ, &responseX, &responseY, &responseZ)) {
+            cameraZ += responseZ;  // Sesuaikan posisi kamera
+        }
+        return cameraZ;
     } else {
         return freeCamZ;
     }
@@ -695,5 +745,7 @@ float getDoraemonY() {
 float getDoraemonZ() {
     return posZ;
 }
+
+
 
 #endif // DORAEMON_C
