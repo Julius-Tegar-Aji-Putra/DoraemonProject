@@ -694,21 +694,20 @@ bool checkCameraCollision(float cameraX, float cameraY, float cameraZ, float* re
 }
 
 // Fungsi untuk mendapatkan posisi kamera X
+// Fungsi untuk mendapatkan posisi kamera X
 float getCameraX() {
-    if (cameraMode == 1) { //
-        // Logika untuk kamera orang ketiga
-        // Perlu diperhatikan bahwa checkCameraCollision di sini mungkin perlu penyesuaian
-        // jika ingin kamera orang ketiga juga terhalang tembok arena dengan benar.
-        // Saat ini, kita fokus pada kamera bebas.
+    if (cameraMode == 1) {
         float targetCamX = posX - cameraDistance * sin(angleY * M_PI / 180.0);
-        // Jika ingin menambahkan collision untuk third person camera:
-        // float rX=0, rY=0, rZ=0;
-        // if(checkCameraCollision(targetCamX, posY + cameraHeight, posZ - cameraDistance * cos(angleY * M_PI / 180.0), &rX, &rY, &rZ)){
-        //    targetCamX += rX;
-        // }
+        float targetCamY = posY + cameraHeight;
+        float targetCamZ = posZ - cameraDistance * cos(angleY * M_PI / 180.0);
+        
+        float responseX = 0.0f, responseY = 0.0f, responseZ = 0.0f;
+        if (checkCameraCollision(targetCamX, targetCamY, targetCamZ, &responseX, &responseY, &responseZ)) {
+            targetCamX += responseX;
+        }
         return targetCamX;
-    } else { //
-        return freeCamX; //
+    } else {
+        return freeCamX;
     }
 }
 
@@ -723,12 +722,18 @@ float getCameraY() {
 
 // Fungsi untuk mendapatkan posisi kamera Z
 float getCameraZ() {
-    if (cameraMode == 1) { //
+    if (cameraMode == 1) {
+        float targetCamX = posX - cameraDistance * sin(angleY * M_PI / 180.0);
+        float targetCamY = posY + cameraHeight;
         float targetCamZ = posZ - cameraDistance * cos(angleY * M_PI / 180.0);
-        // Mirip dengan getCameraX, collision check bisa ditambahkan di sini untuk third person.
+        
+        float responseX = 0.0f, responseY = 0.0f, responseZ = 0.0f;
+        if (checkCameraCollision(targetCamX, targetCamY, targetCamZ, &responseX, &responseY, &responseZ)) {
+            targetCamZ += responseZ;
+        }
         return targetCamZ;
-    } else { //
-        return freeCamZ; //
+    } else {
+        return freeCamZ;
     }
 }
 
