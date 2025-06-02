@@ -6,8 +6,13 @@
 #include <math.h>
 #include <stdio.h>
 #include <GL/glut.h>
+
 extern GLuint texture_tembok_pembatas;
 extern GLuint texture_jalan_paving;
+extern GLuint texture_gedung1;
+extern GLuint texture_gedung2;
+extern GLuint texture_gedung3;
+extern GLuint texture_gedung4;
 
 // Arena properties
 static float arenaSize = 50.0f;
@@ -17,6 +22,7 @@ static float wallHeight = 100.0f;
 static float posX = 0.0f;
 static float posY = 2.0f;
 static float posZ = 15.0f;
+
 static float lookX = 0.0f;
 static float lookY = 0.0f;
 static float lookZ = 0.0f;
@@ -44,79 +50,101 @@ static void addBuilding(float x, float z, float width, float depth, float height
 // Fungsi untuk membuat gedung
 static void drawBuilding(float x, float z, float width, float depth, float height, Color color, float alpha) {
     glPushMatrix();
-    glTranslatef(x, height/2, z);
+    glTranslatef(x, height / 2.0f, z);
+
+    GLuint sideTextureId = 0;
+    if (x > 0 && z > 0) {
+        sideTextureId = texture_gedung1;
+    } else if (x < 0 && z > 0) {
+        sideTextureId = texture_gedung2;
+    } else if (x < 0 && z < 0) {
+        sideTextureId = texture_gedung3;
+    } else if (x > 0 && z < 0) {
+        sideTextureId = texture_gedung4;
+    }
+
+    float halfWidth = width / 2.0f;
+    float halfDepth = depth / 2.0f;
 
     if (alpha < 1.0f) {
-        glDepthMask(GL_FALSE); 
+        glDepthMask(GL_FALSE);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    }
+
+    if (sideTextureId != 0 && glIsTexture(sideTextureId)) {
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, sideTextureId);
+        glColor4f(color.r * 0.9f, color.g * 0.9f, color.b * 0.9f, alpha);
+
+        glBegin(GL_QUADS);
+            glNormal3f(0.0f, 0.0f, 1.0f);
+            glTexCoord2f(0.0f, 0.0f); glVertex3f(-halfWidth, -height/2.0f,  halfDepth);
+            glTexCoord2f(1.0f, 0.0f); glVertex3f( halfWidth, -height/2.0f,  halfDepth);
+            glTexCoord2f(1.0f, 1.0f); glVertex3f( halfWidth,  height/2.0f,  halfDepth);
+            glTexCoord2f(0.0f, 1.0f); glVertex3f(-halfWidth,  height/2.0f,  halfDepth);
+        glEnd();
+
+        glBegin(GL_QUADS);
+            glNormal3f(0.0f, 0.0f, -1.0f);
+            glTexCoord2f(0.0f, 0.0f); glVertex3f( halfWidth, -height/2.0f, -halfDepth);
+            glTexCoord2f(1.0f, 0.0f); glVertex3f(-halfWidth, -height/2.0f, -halfDepth);
+            glTexCoord2f(1.0f, 1.0f); glVertex3f(-halfWidth,  height/2.0f, -halfDepth);
+            glTexCoord2f(0.0f, 1.0f); glVertex3f( halfWidth,  height/2.0f, -halfDepth);
+        glEnd();
+
+        glBegin(GL_QUADS);
+            glNormal3f(1.0f, 0.0f, 0.0f);
+            glTexCoord2f(0.0f, 0.0f); glVertex3f( halfWidth, -height/2.0f, -halfDepth);
+            glTexCoord2f(1.0f, 0.0f); glVertex3f( halfWidth, -height/2.0f,  halfDepth);
+            glTexCoord2f(1.0f, 1.0f); glVertex3f( halfWidth,  height/2.0f,  halfDepth);
+            glTexCoord2f(0.0f, 1.0f); glVertex3f( halfWidth,  height/2.0f, -halfDepth);
+        glEnd();
+
+        glBegin(GL_QUADS);
+            glNormal3f(-1.0f, 0.0f, 0.0f);
+            glTexCoord2f(0.0f, 0.0f); glVertex3f(-halfWidth, -height/2.0f,  halfDepth);
+            glTexCoord2f(1.0f, 0.0f); glVertex3f(-halfWidth, -height/2.0f, -halfDepth);
+            glTexCoord2f(1.0f, 1.0f); glVertex3f(-halfWidth,  height/2.0f, -halfDepth);
+            glTexCoord2f(0.0f, 1.0f); glVertex3f(-halfWidth,  height/2.0f,  halfDepth);
+        glEnd();
+
+        glDisable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    } else {
+        glColor4f(color.r * 0.8f, color.g * 0.8f, color.b * 0.8f, alpha);
+        glBegin(GL_QUADS);
+            glVertex3f(-halfWidth, -height/2.0f, halfDepth); glVertex3f(halfWidth, -height/2.0f, halfDepth);
+            glVertex3f(halfWidth, height/2.0f, halfDepth); glVertex3f(-halfWidth, height/2.0f, halfDepth);
+        glEnd();
+        glBegin(GL_QUADS);
+            glVertex3f(halfWidth, -height/2.0f, -halfDepth); glVertex3f(-halfWidth, -height/2.0f, -halfDepth);
+            glVertex3f(-halfWidth, height/2.0f, -halfDepth); glVertex3f(halfWidth, height/2.0f, -halfDepth);
+        glEnd();
+        glBegin(GL_QUADS);
+            glVertex3f(halfWidth, -height/2.0f, -halfDepth); glVertex3f(halfWidth, -height/2.0f, halfDepth);
+            glVertex3f(halfWidth, height/2.0f, halfDepth); glVertex3f(halfWidth, height/2.0f, -halfDepth);
+        glEnd();
+        glBegin(GL_QUADS);
+            glVertex3f(-halfWidth, -height/2.0f, halfDepth); glVertex3f(-halfWidth, -height/2.0f, -halfDepth);
+            glVertex3f(-halfWidth, height/2.0f, -halfDepth); glVertex3f(-halfWidth, height/2.0f, halfDepth);
+        glEnd();
     }
 
     glColor4f(color.r, color.g, color.b, alpha);
-    
-    // Gedung utama
-    glPushMatrix();
-    glScalef(width, height, depth);
-    glutSolidCube(1.0);
-    glPopMatrix();
-    
-    if (alpha < 1.0f) { 
-      glColor4f(0.1f, 0.1f, 0.2f, alpha); 
-    } else {
-      glColor4f(0.1f, 0.1f, 0.2f, 1.0f); 
-    }
-
-    // Garis-garis untuk jendela
-    glColor4f(0.1f, 0.1f, 0.2f, alpha);
-    float windowSize = 0.5f;
-    float spacing = 0.6f;
-    
-    // Jendela depan
-    for (float wx = -width/2 + spacing; wx < width/2; wx += spacing) {
-        for (float wy = -height/2 + spacing; wy < height/2; wy += spacing) {
-            glPushMatrix();
-            glTranslatef(wx, wy, depth/2 + 0.01f);
-            glScalef(windowSize, windowSize, 0.01f);
-            glutSolidCube(1.0);
-            glPopMatrix();
-        }
-    }
-    
-    // Jendela belakang
-    for (float wx = -width/2 + spacing; wx < width/2; wx += spacing) {
-        for (float wy = -height/2 + spacing; wy < height/2; wy += spacing) {
-            glPushMatrix();
-            glTranslatef(wx, wy, -depth/2 - 0.01f);
-            glScalef(windowSize, windowSize, 0.01f);
-            glutSolidCube(1.0);
-            glPopMatrix();
-        }
-    }
-    
-    // Jendela samping kiri
-    for (float wz = -depth/2 + spacing; wz < depth/2; wz += spacing) {
-        for (float wy = -height/2 + spacing; wy < height/2; wy += spacing) {
-            glPushMatrix();
-            glTranslatef(-width/2 - 0.01f, wy, wz);
-            glScalef(0.01f, windowSize, windowSize);
-            glutSolidCube(1.0);
-            glPopMatrix();
-        }
-    }
-    
-    // Jendela samping kanan
-    for (float wz = -depth/2 + spacing; wz < depth/2; wz += spacing) {
-        for (float wy = -height/2 + spacing; wy < height/2; wy += spacing) {
-            glPushMatrix();
-            glTranslatef(width/2 + 0.01f, wy, wz);
-            glScalef(0.01f, windowSize, windowSize);
-            glutSolidCube(1.0);
-            glPopMatrix();
-        }
-    }
+    glBegin(GL_QUADS);
+        glNormal3f(0.0f, 1.0f, 0.0f);
+        glVertex3f(-halfWidth,  height/2.0f, -halfDepth);
+        glVertex3f( halfWidth,  height/2.0f, -halfDepth);
+        glVertex3f( halfWidth,  height/2.0f,  halfDepth);
+        glVertex3f(-halfWidth,  height/2.0f,  halfDepth);
+    glEnd();
 
     if (alpha < 1.0f) {
-        glDepthMask(GL_TRUE); 
+        glDepthMask(GL_TRUE);
+        glDisable(GL_BLEND);
     }
-    
+
     glPopMatrix();
 }
 
@@ -522,4 +550,4 @@ void drawGroundAndRoofsForStencil() {
     }
 }
 
-#endif
+#endif 

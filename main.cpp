@@ -19,7 +19,11 @@
 using namespace std;
 
 GLuint texture_tembok_pembatas;
-GLuint texture_jalan_paving; 
+GLuint texture_jalan_paving;
+GLuint texture_gedung1;
+GLuint texture_gedung2;
+GLuint texture_gedung3;
+GLuint texture_gedung4; 
 
 // ============== Variabel Global untuk Game State ==============
 int score = 0;
@@ -169,6 +173,46 @@ void init() {
     } else {
         printf("PERINGATAN UTAMA: Gagal memuat paving.bmp menggunakan loadBMP!\n");
         texture_jalan_paving = 0;
+    }
+
+    Image* img_gedung1 = loadBMP("gedung1.bmp");
+    if (img_gedung1 != NULL) {
+        texture_gedung1 = createOpenGLTexture(img_gedung1);
+        delete img_gedung1;
+        printf("Tekstur gedung1.bmp berhasil dimuat dengan ID: %u\n", texture_gedung1);
+    } else {
+        printf("PERINGATAN UTAMA: Gagal memuat gedung1.bmp!\n");
+        texture_gedung1 = 0; 
+    }
+
+    Image* img_gedung2 = loadBMP("gedung2.bmp");
+    if (img_gedung2 != NULL) {
+        texture_gedung2 = createOpenGLTexture(img_gedung2);
+        delete img_gedung2;
+        printf("Tekstur gedung2.bmp berhasil dimuat dengan ID: %u\n", texture_gedung2);
+    } else {
+        printf("PERINGATAN UTAMA: Gagal memuat gedung2.bmp!\n");
+        texture_gedung2 = 0;
+    }
+
+    Image* img_gedung3 = loadBMP("gedung3.bmp");
+    if (img_gedung3 != NULL) {
+        texture_gedung3 = createOpenGLTexture(img_gedung3);
+        delete img_gedung3;
+        printf("Tekstur gedung3.bmp berhasil dimuat dengan ID: %u\n", texture_gedung3);
+    } else {
+        printf("PERINGATAN UTAMA: Gagal memuat gedung3.bmp!\n");
+        texture_gedung3 = 0;
+    }
+
+    Image* img_gedung4 = loadBMP("gedung4.bmp");
+    if (img_gedung4 != NULL) {
+        texture_gedung4 = createOpenGLTexture(img_gedung4);
+        delete img_gedung4;
+        printf("Tekstur gedung4.bmp berhasil dimuat dengan ID: %u\n", texture_gedung4);
+    } else {
+        printf("PERINGATAN UTAMA: Gagal memuat gedung4.bmp!\n");
+        texture_gedung4 = 0;
     }
 
     resetGame();
