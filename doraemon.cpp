@@ -505,7 +505,7 @@ void drawGround() {
 
 // Fungsi untuk memproses tombol yang ditekan
 static void processKeys() {
-    float speed = 0.3f;
+    float speed = 0.04f;
     float maxTilt = 15.0f; 
     float camSpeed = 0.25f;
     float collisionRadius = 0.5f; 
@@ -525,12 +525,12 @@ static void processKeys() {
         }
         
         if (keyStates['a'] || keyStates['A']) {
-            camAngle -= 0.15f;
+            camAngle -= 0.6f;
             orientCamera(camAngle);
         }
         
         if (keyStates['d'] || keyStates['D']) {
-            camAngle += 0.15f;
+            camAngle += 0.6f;
             orientCamera(camAngle);
         }
     } else {
@@ -554,12 +554,12 @@ static void processKeys() {
         }
         
         if (keyStates['a'] || keyStates['A']) {
-            angleY += 3.0f;
+            angleY += 0.6f;
             targetTiltX = -maxTilt; 
         }
         
         if (keyStates['d'] || keyStates['D']) {
-            angleY -= 3.0;
+            angleY -= 0.6f;
             targetTiltX = maxTilt; 
         }
         
