@@ -28,6 +28,7 @@ GLuint texture_gedung4;
 // ============== Variabel Global untuk Game State ==============
 int score = 0;
 int collectedCoinsCount = 0;
+bool gameStarting = true;
 bool gameIsActive = false; 
 bool gameOver = false;
 chrono::steady_clock::time_point gameStartTime;
@@ -118,7 +119,8 @@ void resetGame() {
     printf("Starting new game / Resetting game...\n");
     score = 0;
     collectedCoinsCount = 0;
-    gameIsActive = true;
+    gameStarting = true;
+    gameIsActive = false;
     gameOver = false;
 
     initDoraemon();
@@ -513,12 +515,54 @@ void display() {
         char timerText[50];
         sprintf(timerText, "Waktu Selesai: %02d:%02d:%02d", hours, minutes, seconds);
         drawArenaText(10, glutGet(GLUT_WINDOW_HEIGHT) - 2 * (uiFontHeight + uiPadding), timerText, whiteR, whiteG, whiteB, uiFont);
+    } else if (gameStarting) { 
+        sprintf(timerText, "Waktu: 00:00:00");
+        drawArenaText(10, glutGet(GLUT_WINDOW_HEIGHT) - 2 * (uiFontHeight + uiPadding), timerText, whiteR, whiteG, whiteB, uiFont);
     }
 
     // --- Tampilkan Status Bayangan (Sudah Anda tambahkan sebelumnya) ---
     char shadowStatusText[50];
-    sprintf(shadowStatusText, "Bayangan (B): %s", (shadowsEnabled ? "Aktif" : "Nonaktif"));
+    sprintf(shadowStatusText, "Bayangan (Tombol B): %s", (shadowsEnabled ? "Aktif" : "Nonaktif"));
     drawArenaText(10, glutGet(GLUT_WINDOW_HEIGHT) - 3 * (uiFontHeight + uiPadding), shadowStatusText, whiteR, whiteG, whiteB, uiFont);
+
+    // --- Tampilkan Pesan Objektif Game ---
+    if (gameStarting) {
+        void* objectiveFont = GLUT_BITMAP_TIMES_ROMAN_24;
+        float charHeight = 24.0f;
+        float bgPaddingX_objective = 15.0f;
+        float bgPaddingY_objective = 10.0f;
+
+        float rText = 0.0f, gText = 0.0f, bText = 0.0f;
+        float rBg = 1.0f, gBg = 1.0f, bBg = 1.0f, aBg = 1.0f;
+
+        const char* msgObj1 = "Objektif dari game ini adalah mengumpulkan 10 koin";
+        const char* msgObj2 = "Tekan 'ENTER' untuk Memulai";
+
+        float screenWidth = glutGet(GLUT_WINDOW_WIDTH);
+        float screenHeight = glutGet(GLUT_WINDOW_HEIGHT);
+
+        int msgObj1Width = 0;
+        for (const char* c = msgObj1; *c; c++) {
+            msgObj1Width += glutBitmapWidth(objectiveFont, *c);
+        }
+        int msgObj2Width = 0;
+        for (const char* c = msgObj2; *c; c++) {
+            msgObj2Width += glutBitmapWidth(objectiveFont, *c);
+        }
+
+        float y_pos_line1 = screenHeight / 2.0f + bgPaddingY_objective + uiPadding / 2.0f;
+        float y_pos_line2 = screenHeight / 2.0f - charHeight - bgPaddingY_objective - uiPadding / 2.0f;
+
+        drawText(msgObj1, (screenWidth - msgObj1Width) / 2.0f, y_pos_line1,
+                rText, gText, bText,
+                rBg, gBg, bBg, aBg,
+                objectiveFont, bgPaddingX_objective, bgPaddingY_objective);
+
+        drawText(msgObj2, (screenWidth - msgObj2Width) / 2.0f, y_pos_line2,
+                rText, gText, bText,
+                rBg, gBg, bBg, aBg,
+                objectiveFont, bgPaddingX_objective, bgPaddingY_objective);
+    }
 
 
     // --- Tampilkan Pesan Game Over dan Tombol Restart ---
@@ -606,6 +650,17 @@ void reshape(int w, int h) {
 
 // ============== Fungsi keyboard() dimodifikasi ==============
 void keyboard(unsigned char key, int x, int y) {
+    if (gameStarting) { 
+        if (key == 13) { 
+            printf("Enter pressed, starting game!\n");
+            gameStarting = false;
+            gameIsActive = true;
+            gameOver = false; 
+            gameStartTime = chrono::steady_clock::now(); 
+            
+        }
+    } 
+    
     if (gameIsActive) { 
         setKeyState(key, true); 
     }
