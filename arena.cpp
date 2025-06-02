@@ -72,10 +72,10 @@ static void drawBuilding(float x, float z, float width, float depth, float heigh
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
 
-    if (sideTextureId != 0 && glIsTexture(sideTextureId)) {
+    if (sideTextureId != 0) {
         glEnable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, sideTextureId);
-        glColor4f(color.r * 0.9f, color.g * 0.9f, color.b * 0.9f, alpha);
+        glColor4f(1.0f, 1.0f, 1.0f, alpha);
 
         glBegin(GL_QUADS);
             glNormal3f(0.0f, 0.0f, 1.0f);
@@ -147,6 +147,8 @@ static void drawBuilding(float x, float z, float width, float depth, float heigh
 
     glPopMatrix();
 }
+
+
 
 // FUNGSI BARU: Untuk mengecek apakah kamera di dalam gedung
 static bool isCameraInsideThisBuilding(const Building& building, float camX, float camY, float camZ) {
