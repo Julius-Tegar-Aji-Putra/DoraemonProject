@@ -746,7 +746,7 @@ int main(int argc, char** argv) {
     int posX = (screenWidth - windowWidth) / 2;
     int posY = (screenHeight - windowHeight) / 2;
     glutInitWindowPosition(posX, posY); 
-    glutCreateWindow("Doraemon 3D dengan Baling-Baling Bambu - Terbang");
+    glutCreateWindow("Kelompok 2 GKV C1");
     
     init();
     
