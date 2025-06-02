@@ -29,7 +29,7 @@ void updateKoin() {
     for (size_t i = 0; i < koinAktifDiGame.size(); ++i) {
         if (koinAktifDiGame[i].isActive) {
             // Rotasi koin
-            koinAktifDiGame[i].rotation += 10.0f; 
+            koinAktifDiGame[i].rotation += 1.0f; 
             if (koinAktifDiGame[i].rotation > 360.0f) {
                 koinAktifDiGame[i].rotation -= 360.0f;
             }

@@ -34,7 +34,7 @@ chrono::steady_clock::time_point gameStartTime;
 long long gameDurationSeconds = 0; 
 
 const float COLLECTION_RADIUS = 1.5f; 
-const int TARGET_COINS_TO_COLLECT = 5; 
+const int TARGET_COINS_TO_COLLECT = 10; 
 
 bool shadowsEnabled = true;
 
@@ -266,7 +266,7 @@ void drawShadows() {
     glEnable(GL_DEPTH_TEST); 
     glDepthMask(GL_FALSE);   
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
     glColor4f(0.15f, 0.15f, 0.15f, 0.6f); 
 
     glEnable(GL_STENCIL_TEST);
@@ -699,7 +699,6 @@ int main(int argc, char** argv) {
     glutReshapeFunc(reshape);
     glutKeyboardFunc(keyboard);
     glutKeyboardUpFunc(keyboardUp);
-    glutSpecialFunc(specialKeyPressed);
     glutIdleFunc(idle);
     glutMainLoop();
     return 0;
